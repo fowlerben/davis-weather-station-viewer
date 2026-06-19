@@ -1,0 +1,137 @@
+:root {
+  --primary: #667eea;
+  --secondary: #764ba2;
+  --success: #48bb78;
+  --warning: #f6ad55;
+  --danger: #f56565;
+  --dark: #2d3748;
+  --light: #f7fafc;
+  --border: #e2e8f0;
+}
+
+.App {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  padding: 20px;
+}
+
+.app-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.app-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.app-header p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+.app-main {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.error-banner {
+  background: #fed7d7;
+  color: #742a2a;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #f56565;
+  font-weight: 500;
+}
+
+.loading {
+  text-align: center;
+  color: white;
+  font-size: 1.2rem;
+  padding: 40px;
+}
+
+.current-section {
+  margin-bottom: 40px;
+}
+
+.history-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.history-header {
+  margin-bottom: 30px;
+}
+
+.history-header h2 {
+  font-size: 1.8rem;
+  color: var(--dark);
+  margin-bottom: 10px;
+}
+
+.metric-selector {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.metric-selector label {
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.metric-selector select {
+  padding: 10px 15px;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.metric-selector select:hover {
+  border-color: var(--primary);
+}
+
+.metric-selector select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.app-footer {
+  text-align: center;
+  color: white;
+  margin-top: 40px;
+  opacity: 0.8;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .history-section {
+    padding: 20px;
+  }
+  
+  .metric-selector {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .metric-selector select {
+    width: 100%;
+  }
+}
