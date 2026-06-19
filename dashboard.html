@@ -41,6 +41,58 @@
             opacity: 0.9;
         }
 
+        .status-banner {
+            background: white;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-text {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .status-connected {
+            color: #22863a;
+            background: #f0f9f4;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-error {
+            color: #cb2431;
+            background: #ffeef0;
+            border-left: 4px solid #d73a49;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: #d73a49;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         .current-section {
             background: white;
             border-radius: 12px;
@@ -222,18 +274,25 @@
             font-size: 0.9rem;
         }
 
-        .demo-banner {
-            background: #fef5e7;
-            border-left: 4px solid #f39c12;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #7d6608;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
         }
 
-        .demo-banner strong {
-            display: block;
-            margin-bottom: 5px;
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -254,6 +313,11 @@
             .stats-summary {
                 grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             }
+
+            .status-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -261,62 +325,25 @@
     <div class="container">
         <div class="header">
             <h1>📊 Davis Weather Station Dashboard</h1>
-            <p>Real-time weather data and historical analysis</p>
+            <p>Real-time weather data from your station</p>
         </div>
 
-        <div class="current-section">
-            <div class="demo-banner">
-                <strong>⚠️ Demo Mode</strong>
-                This is a sample dashboard showing how your weather data will look. To connect to your actual Davis station, you'll need to set up a local API bridge (we can help with that later).
+        <div class="status-banner" id="statusBanner">
+            <div class="status-text">
+                <span class="status-dot connected"></span>
+                <span id="statusText">Connecting to station...</span>
             </div>
+            <div id="stationIP" style="font-size: 0.85rem; color: #718096;">192.168.1.103</div>
+        </div>
 
-            <div class="condition-header">
-                <div class="temperature-display">
-                    <div class="temp-icon" id="weatherIcon">⛅</div>
-                    <div class="temp-value" id="currentTemp">72.5°F</div>
-                </div>
-                <div class="last-updated" id="lastUpdated">Last updated: Loading...</div>
-            </div>
-
-            <div class="condition-grid">
-                <div class="condition-card">
-                    <div class="condition-label">Humidity</div>
-                    <div class="condition-value" id="humidity">45%</div>
-                </div>
-
-                <div class="condition-card">
-                    <div class="condition-label">Wind Speed</div>
-                    <div class="condition-value" id="windSpeed">8.5 mph</div>
-                </div>
-
-                <div class="condition-card">
-                    <div class="condition-label">Wind Direction</div>
-                    <div class="condition-value" id="windDir">245°</div>
-                </div>
-
-                <div class="condition-card">
-                    <div class="condition-label">Pressure</div>
-                    <div class="condition-value" id="pressure">29.95 inHg</div>
-                </div>
-
-                <div class="condition-card">
-                    <div class="condition-label">Rain Rate</div>
-                    <div class="condition-value" id="rainRate">0.00 in/hr</div>
-                </div>
-
-                <div class="condition-card">
-                    <div class="condition-label">Solar Radiation</div>
-                    <div class="condition-value" id="solarRad">650 W/m²</div>
-                </div>
-
-                <div class="condition-card">
-                    <div class="condition-label">UV Index</div>
-                    <div class="condition-value" id="uvIndex">6.5</div>
-                </div>
+        <div class="current-section" id="currentSection">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px;">Loading weather data...</p>
             </div>
         </div>
 
-        <div class="history-section">
+        <div class="history-section" id="historySection" style="display: none;">
             <div class="history-header">
                 <h2>Historical Data</h2>
             </div>
@@ -362,47 +389,62 @@
         </div>
 
         <div class="footer">
-            <p>Davis Weather Station Dashboard • Demo Mode</p>
+            <p>Davis Weather Station Dashboard • Live Data</p>
         </div>
     </div>
 
     <script>
-        // Demo data generator
-        function generateDemoData() {
-            const now = new Date();
-            const data = [];
-            
-            // Generate 24 hours of sample data
-            for (let i = 0; i < 24; i++) {
-                const time = new Date(now.getTime() - (23 - i) * 60 * 60 * 1000);
-                const temp = 65 + Math.sin(i / 24 * Math.PI * 2) * 10 + Math.random() * 5;
-                
-                data.push({
-                    timestamp: time.toISOString(),
-                    temp: parseFloat(temp.toFixed(1)),
-                    humidity: Math.floor(30 + Math.sin(i / 24 * Math.PI * 2) * 20 + Math.random() * 10),
-                    windSpeed: Math.floor(5 + Math.cos(i / 24 * Math.PI * 2) * 5 + Math.random() * 3),
-                    windDir: Math.floor(Math.random() * 360),
-                    pressure: parseFloat((29.9 + Math.sin(i / 24 * Math.PI * 2) * 0.2).toFixed(2)),
-                    rainRate: Math.random() > 0.95 ? parseFloat((Math.random() * 0.1).toFixed(2)) : 0,
-                    solarRad: Math.max(0, Math.floor(500 + Math.sin((i - 6) / 24 * Math.PI * 2) * 400)),
-                    uvIndex: Math.max(0, parseFloat((4 + Math.sin((i - 6) / 24 * Math.PI * 2) * 3).toFixed(1)))
-                });
-            }
-            
-            return data;
-        }
-
-        let demoData = generateDemoData();
+        const STATION_URL = 'http://192.168.1.103/v1/current_conditions';
+        const STATION_TOKEN = '2FC1C7EE3F1A48D48DCF66EC9E5335B0';
+        
+        let historicalData = [];
         let chart = null;
 
-        // Initialize dashboard
-        function initDashboard() {
-            updateCurrentConditions();
-            updateChart();
+        // Fetch data from Davis station with CORS proxy
+        async function fetchStationData() {
+            try {
+                const url = `${STATION_URL}?api_token=${STATION_TOKEN}`;
+                
+                // Try direct fetch first
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Fetch error:', error);
+                throw error;
+            }
+        }
+
+        // Transform Davis data to dashboard format
+        function transformData(stationData) {
+            const conditions = stationData.data?.conditions?.[0] || {};
+            
+            return {
+                timestamp: new Date().toISOString(),
+                temp: parseFloat(conditions.temp_f || 0).toFixed(1),
+                humidity: Math.round(conditions.humidity || 0),
+                windSpeed: Math.round(conditions.wind_speed_mph || 0),
+                windDir: Math.round(conditions.wind_dir || 0),
+                pressure: parseFloat(conditions.barometric_pressure_in || 0).toFixed(2),
+                rainRate: parseFloat(conditions.rainfall_in || 0).toFixed(2),
+                solarRad: Math.round(conditions.solar_radiation || 0),
+                uvIndex: parseFloat(conditions.uv_index || 0).toFixed(1)
+            };
         }
 
         function getWeatherIcon(temp) {
+            temp = parseFloat(temp);
             if (temp < 32) return '❄️';
             if (temp < 50) return '🌤️';
             if (temp < 70) return '⛅';
@@ -410,24 +452,89 @@
             return '🔥';
         }
 
-        function updateCurrentConditions() {
-            const latest = demoData[demoData.length - 1];
+        function displayCurrentConditions(data) {
+            const html = `
+                <div class="condition-header">
+                    <div class="temperature-display">
+                        <div class="temp-icon">${getWeatherIcon(data.temp)}</div>
+                        <div class="temp-value">${data.temp}°F</div>
+                    </div>
+                    <div class="last-updated" id="lastUpdated">Last updated: ${new Date(data.timestamp).toLocaleString()}</div>
+                </div>
+
+                <div class="condition-grid">
+                    <div class="condition-card">
+                        <div class="condition-label">Humidity</div>
+                        <div class="condition-value">${data.humidity}%</div>
+                    </div>
+
+                    <div class="condition-card">
+                        <div class="condition-label">Wind Speed</div>
+                        <div class="condition-value">${data.windSpeed} mph</div>
+                    </div>
+
+                    <div class="condition-card">
+                        <div class="condition-label">Wind Direction</div>
+                        <div class="condition-value">${data.windDir}°</div>
+                    </div>
+
+                    <div class="condition-card">
+                        <div class="condition-label">Pressure</div>
+                        <div class="condition-value">${data.pressure} inHg</div>
+                    </div>
+
+                    <div class="condition-card">
+                        <div class="condition-label">Rain Rate</div>
+                        <div class="condition-value">${data.rainRate} in/hr</div>
+                    </div>
+
+                    <div class="condition-card">
+                        <div class="condition-label">Solar Radiation</div>
+                        <div class="condition-value">${data.solarRad} W/m²</div>
+                    </div>
+
+                    <div class="condition-card">
+                        <div class="condition-label">UV Index</div>
+                        <div class="condition-value">${data.uvIndex}</div>
+                    </div>
+                </div>
+            `;
             
-            document.getElementById('currentTemp').textContent = latest.temp + '°F';
-            document.getElementById('humidity').textContent = latest.humidity + '%';
-            document.getElementById('windSpeed').textContent = latest.windSpeed + ' mph';
-            document.getElementById('windDir').textContent = latest.windDir + '°';
-            document.getElementById('pressure').textContent = latest.pressure + ' inHg';
-            document.getElementById('rainRate').textContent = latest.rainRate.toFixed(2) + ' in/hr';
-            document.getElementById('solarRad').textContent = latest.solarRad + ' W/m²';
-            document.getElementById('uvIndex').textContent = latest.uvIndex.toFixed(1);
-            document.getElementById('weatherIcon').textContent = getWeatherIcon(latest.temp);
-            
-            const date = new Date(latest.timestamp);
-            document.getElementById('lastUpdated').textContent = 'Last updated: ' + date.toLocaleString();
+            document.getElementById('currentSection').innerHTML = html;
+            document.getElementById('historySection').style.display = 'block';
         }
 
-        function updateChart() {
+        function displayError(error) {
+            const banner = document.getElementById('statusBanner');
+            banner.className = 'status-banner status-error';
+            document.getElementById('statusText').textContent = `Error: ${error}`;
+            
+            const dot = banner.querySelector('.status-dot');
+            dot.classList.remove('connected');
+            dot.classList.add('error');
+            
+            const html = `
+                <div style="padding: 40px; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                    <h2 style="color: #2d3748; margin-bottom: 10px;">Unable to Connect to Station</h2>
+                    <p style="color: #718096; margin-bottom: 20px;">${error}</p>
+                    <p style="color: #718096; font-size: 0.9rem;">Make sure:</p>
+                    <ul style="color: #718096; text-align: left; display: inline-block; margin-top: 10px;">
+                        <li>Your Davis station is powered on</li>
+                        <li>Your station is at 192.168.1.103</li>
+                        <li>Your computer is on the same WiFi network</li>
+                        <li>The API token is correct</li>
+                    </ul>
+                </div>
+            `;
+            
+            document.getElementById('currentSection').innerHTML = html;
+            document.getElementById('historySection').style.display = 'none';
+        }
+
+        async function updateChart() {
+            if (historicalData.length === 0) return;
+
             const metric = document.getElementById('metricSelect').value;
             const metricNames = {
                 temp: 'Temperature (°F)',
@@ -440,20 +547,20 @@
                 uvIndex: 'UV Index'
             };
 
-            const labels = demoData.map(d => {
+            const labels = historicalData.map(d => {
                 const date = new Date(d.timestamp);
                 return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             });
 
-            const values = demoData.map(d => d[metric]);
+            const values = historicalData.map(d => parseFloat(d[metric]));
 
             // Calculate statistics
-            const min = Math.min(...values);
-            const max = Math.max(...values);
+            const min = Math.min(...values).toFixed(2);
+            const max = Math.max(...values).toFixed(2);
             const avg = (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2);
 
-            document.getElementById('statMin').textContent = min.toFixed(2);
-            document.getElementById('statMax').textContent = max.toFixed(2);
+            document.getElementById('statMin').textContent = min;
+            document.getElementById('statMax').textContent = max;
             document.getElementById('statAvg').textContent = avg;
             document.getElementById('statCount').textContent = values.length;
 
@@ -509,7 +616,41 @@
             });
         }
 
-        // Initialize on page load
+        async function initDashboard() {
+            try {
+                const stationData = await fetchStationData();
+                const currentData = transformData(stationData);
+                
+                // Add to historical data (keep last 24 readings)
+                historicalData.push(currentData);
+                if (historicalData.length > 24) {
+                    historicalData.shift();
+                }
+
+                displayCurrentConditions(currentData);
+                
+                // Update chart if we have enough data
+                if (historicalData.length > 1) {
+                    updateChart();
+                }
+
+                // Update status banner
+                const banner = document.getElementById('statusBanner');
+                banner.className = 'status-banner status-connected';
+                document.getElementById('statusText').textContent = '✓ Connected to station';
+                
+                // Refresh data every 60 seconds
+                setTimeout(initDashboard, 60000);
+            } catch (error) {
+                console.error('Error:', error);
+                displayError(error.message);
+                
+                // Retry after 10 seconds
+                setTimeout(initDashboard, 10000);
+            }
+        }
+
+        // Start when page loads
         window.addEventListener('load', initDashboard);
     </script>
 </body>
